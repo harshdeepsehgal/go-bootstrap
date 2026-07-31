@@ -22,9 +22,6 @@ vet: ## Run Go's built-in static analysis
 	@go vet ./...
 
 test: ## Run tests without the Go test cache
-	@go test -count=1 ./...
-
-race: ## Run tests with the race detector
 	@go test -race -count=1 ./...
 
 check: fmt-check vet test ## Run the fast pre-submit checks
