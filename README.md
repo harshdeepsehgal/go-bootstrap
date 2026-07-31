@@ -221,6 +221,15 @@ profiles, and operating-system metadata.
 > TODO: List important constraints, unsupported use cases, scaling limits, and accepted technical
 > debt. Remove this section when there are no known limitations.
 
+## Continuous integration
+
+The `Check` workflow in `.github/workflows/check.yml` runs `make check` for every pull request
+targeting `master` and every push to `master`. Update its branch filters if the repository uses a
+different default branch.
+
+> TODO: Add integration tests, security checks, release jobs, and deployment gates as the project
+> evolves.
+
 ## Contributing
 
 Keep changes focused, explain important assumptions, add tests for changed behavior, and run
