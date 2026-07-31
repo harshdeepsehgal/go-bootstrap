@@ -1,0 +1,16 @@
+# Operating-system files
+.DS_Store
+
+# Local secrets and machine-specific editor state
+.env
+infra/local/.env
+.vscode/
+.editorconfig
+
+# Generated build and test artifacts
+bin/
+dist/
+coverage.out
+coverage.html
+*.test
+*.prof
