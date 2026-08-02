@@ -6,26 +6,38 @@ import (
 	"testing"
 )
 
-func TestHTTPHandlerAllowsHealthCheck(t *testing.T) {
-	response := httptest.NewRecorder()
-	NewHTTPHandler().ServeHTTP(
-		response,
-		httptest.NewRequest(http.MethodGet, "/healthz", nil),
-	)
-
-	if response.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", response.Code)
+func TestNewHTTPHandler(t *testing.T) {
+	tests := []struct {
+		name       string
+		method     string
+		path       string
+		wantStatus int
+	}{
+		{
+			name:       "allows health check",
+			method:     http.MethodGet,
+			path:       "/healthz",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "rejects unsupported health check method",
+			method:     http.MethodPost,
+			path:       "/healthz",
+			wantStatus: http.StatusMethodNotAllowed,
+		},
 	}
-}
 
-func TestHTTPHandlerRejectsUnsupportedHealthCheckMethod(t *testing.T) {
-	response := httptest.NewRecorder()
-	NewHTTPHandler().ServeHTTP(
-		response,
-		httptest.NewRequest(http.MethodPost, "/healthz", nil),
-	)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			response := httptest.NewRecorder()
+			NewHTTPHandler().ServeHTTP(
+				response,
+				httptest.NewRequest(tt.method, tt.path, nil),
+			)
 
-	if response.Code != http.StatusMethodNotAllowed {
-		t.Fatalf("expected status 405, got %d", response.Code)
+			if response.Code != tt.wantStatus {
+				t.Fatalf("expected status %d, got %d", tt.wantStatus, response.Code)
+			}
+		})
 	}
 }

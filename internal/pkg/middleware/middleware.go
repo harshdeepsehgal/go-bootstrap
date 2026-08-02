@@ -5,7 +5,10 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"github.com/google/uuid"
+
 	"go-bootstrap/internal/pkg/logger"
+
 	"go.uber.org/zap"
 )
 
@@ -26,7 +29,7 @@ func Recover() Middleware {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if recovered := recover(); recovered != nil {
-					logger.Logger().Error(
+					logger.Log.Error(
 						"panic while handling request",
 						zap.Any("panic", recovered),
 						zap.String("method", r.Method),
@@ -37,6 +40,29 @@ func Recover() Middleware {
 				}
 			}()
 			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func Context() Middleware {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			requestID := r.Header.Get("X-Request-ID")
+			if requestID == "" {
+				requestID = uuid.NewString()
+			}
+
+			ctx := logger.WithRequestID(r.Context(), requestID)
+
+			w.Header().Set("X-Request-ID", requestID)
+
+			logger.Logger(ctx).Info(
+				"request started",
+				zap.String("method", r.Method),
+				zap.String("path", r.URL.Path),
+			)
+
+			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }
