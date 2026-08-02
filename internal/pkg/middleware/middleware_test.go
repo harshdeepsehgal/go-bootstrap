@@ -90,7 +90,11 @@ func TestContext(t *testing.T) {
 				t.Fatal("expected response request ID")
 			}
 			if responseRequestID != contextRequestID {
-				t.Fatalf("expected matching response and context request IDs, got %q and %q", responseRequestID, contextRequestID)
+				t.Fatalf(
+					"expected matching response and context request IDs, got %q and %q",
+					responseRequestID,
+					contextRequestID,
+				)
 			}
 			if tt.wantRequestID != "" && responseRequestID != tt.wantRequestID {
 				t.Fatalf("expected request ID %q, got %q", tt.wantRequestID, responseRequestID)

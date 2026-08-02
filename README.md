@@ -163,8 +163,8 @@ make deps-down
 | Command | Description |
 | --- | --- |
 | `make fmt` | Format Go source files |
-| `make check` | Check formatting, run `go vet`, and run tests |
-| `make race` | Run tests with the race detector |
+| `make test` | Run tests with the race detector and without the test cache |
+| `make check` | Check formatting, run `go vet`, and run race-enabled tests |
 | `make build` | Build `bin/go-bootstrap` |
 | `make run` | Run the API locally |
 | `make deps-up` | Start optional local dependencies |
@@ -173,10 +173,38 @@ make deps-down
 | `make zip` | Create `dist/go-bootstrap.zip` |
 | `make clean` | Remove generated binary and archive files |
 
-### Testing
+### Unit tests
 
-Keep focused tests beside the code they cover. Run `make check` before submitting a change and
-`make race` for changes involving shared state, concurrency, server lifecycle, or middleware.
+Keep tests beside the code they cover and name them after the function or method under test, such as
+`TestNew` or `TestServer_Run`. Prefer GoLand-style table-driven tests when behavior has multiple
+meaningful cases:
+
+```go
+func TestFunction(t *testing.T) {
+	tests := []struct {
+		name string
+		// inputs and expected values
+	}{
+		{
+			name: "describes expected behavior",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// arrange, act, and assert
+		})
+	}
+}
+```
+
+Keep a single lifecycle or concurrency scenario as a direct test when a table would add noise. Use
+`httptest` for HTTP behavior, restore replaced global state with `t.Cleanup`, and do not use
+`t.Parallel` when a test changes environment variables or process-wide singletons. Coordinate
+concurrent tests with channels and bounded timeouts rather than arbitrary sleeps.
+
+Run `make test` for the test suite or `make check` for formatting, vetting, and tests. Both commands
+run tests with the race detector and disable the Go test cache.
 
 > TODO: Document integration, contract, end-to-end, load, and test-data workflows as they are added.
 
@@ -200,12 +228,6 @@ The image runs the server binary and expects runtime configuration through envir
 
 > TODO: Document environments, deployment commands, infrastructure ownership, database migration
 > order, health gates, rollback steps, and release approval requirements.
-
-## Packaging
-
-Run `make zip` to create `dist/go-bootstrap.zip`. The source archive excludes Git metadata, local
-editor configuration such as `.vscode`, environment files, build outputs, coverage reports, test
-profiles, and operating-system metadata.
 
 ## Security
 
