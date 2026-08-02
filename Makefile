@@ -6,7 +6,7 @@ LOCAL_ENV_EXAMPLE := $(LOCAL_INFRA_DIR)/.env.example
 COMPOSE_FILE := $(LOCAL_INFRA_DIR)/compose.dependencies.yaml
 COMPOSE := docker compose --env-file $(LOCAL_ENV_FILE) -f $(COMPOSE_FILE)
 
-.PHONY: help fmt fmt-check vet test race check build run local-env deps-up deps-down deps-logs \
+.PHONY: help fmt fmt-check vet test check build run local-env deps-up deps-down deps-logs \
 	deps-ps docker-build zip clean
 
 help:
@@ -21,10 +21,10 @@ fmt-check: ## Fail if any Go file is not formatted
 vet: ## Run Go's built-in static analysis
 	@go vet ./...
 
-test: ## Run tests without the Go test cache
+test: ## Run tests with the race detector and without the Go test cache
 	@go test -race -count=1 ./...
 
-check: fmt-check vet test ## Run the fast pre-submit checks
+check: fmt-check vet test ## Run the pre-submit checks
 
 build: ## Build the API binary
 	@mkdir -p bin

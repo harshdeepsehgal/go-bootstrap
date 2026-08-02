@@ -6,27 +6,39 @@ import (
 	"testing"
 )
 
-func TestExampleUsersRouteAllowsGET(t *testing.T) {
-	response := httptest.NewRecorder()
-	testHandler().ServeHTTP(
-		response,
-		httptest.NewRequest(http.MethodGet, "/users", nil),
-	)
-
-	if response.Code != http.StatusOK {
-		t.Fatalf("expected status 200, got %d", response.Code)
+func TestRegisterRoutes(t *testing.T) {
+	tests := []struct {
+		name       string
+		method     string
+		path       string
+		wantStatus int
+	}{
+		{
+			name:       "allows example users route",
+			method:     http.MethodGet,
+			path:       "/users",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "rejects unsupported method",
+			method:     http.MethodPost,
+			path:       "/users",
+			wantStatus: http.StatusMethodNotAllowed,
+		},
 	}
-}
 
-func TestExampleUsersRouteRejectsUnsupportedMethod(t *testing.T) {
-	response := httptest.NewRecorder()
-	testHandler().ServeHTTP(
-		response,
-		httptest.NewRequest(http.MethodPost, "/users", nil),
-	)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			response := httptest.NewRecorder()
+			testHandler().ServeHTTP(
+				response,
+				httptest.NewRequest(tt.method, tt.path, nil),
+			)
 
-	if response.Code != http.StatusMethodNotAllowed {
-		t.Fatalf("expected status 405, got %d", response.Code)
+			if response.Code != tt.wantStatus {
+				t.Fatalf("expected status %d, got %d", tt.wantStatus, response.Code)
+			}
+		})
 	}
 }
 

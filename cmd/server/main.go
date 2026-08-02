@@ -44,7 +44,7 @@ func run() error {
 	defer stop()
 
 	if err := httpServer.Run(ctx); err != nil {
-		logger.Logger().Error("HTTP server stopped unexpectedly", zap.Error(err))
+		logger.Log.Error("HTTP server stopped unexpectedly", zap.Error(err))
 		return err
 	}
 
@@ -57,5 +57,5 @@ func NewHTTPHandler() http.Handler {
 	handler.RegisterRoutes(mux)
 	mux.HandleFunc("GET /healthz", healthcheck.HealthCheckHandler)
 
-	return middleware.Chain(mux, middleware.Recover())
+	return middleware.Chain(mux, middleware.Recover(), middleware.Context())
 }

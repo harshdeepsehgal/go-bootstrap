@@ -32,20 +32,40 @@ func TestRunStopsWhenContextIsCancelled(t *testing.T) {
 	}
 }
 
-func TestNewConfiguresTimeouts(t *testing.T) {
-	server := New(Config{
-		ReadHeaderTimeout: time.Second,
-		WriteTimeout:      2 * time.Second,
-		IdleTimeout:       3 * time.Second,
-	})
+func TestNew(t *testing.T) {
+	tests := []struct {
+		name                  string
+		config                Config
+		wantReadHeaderTimeout time.Duration
+		wantWriteTimeout      time.Duration
+		wantIdleTimeout       time.Duration
+	}{
+		{
+			name: "configures timeouts",
+			config: Config{
+				ReadHeaderTimeout: time.Second,
+				WriteTimeout:      2 * time.Second,
+				IdleTimeout:       3 * time.Second,
+			},
+			wantReadHeaderTimeout: time.Second,
+			wantWriteTimeout:      2 * time.Second,
+			wantIdleTimeout:       3 * time.Second,
+		},
+	}
 
-	if server.server.ReadHeaderTimeout != time.Second {
-		t.Fatalf("expected read header timeout 1s, got %s", server.server.ReadHeaderTimeout)
-	}
-	if server.server.WriteTimeout != 2*time.Second {
-		t.Fatalf("expected write timeout 2s, got %s", server.server.WriteTimeout)
-	}
-	if server.server.IdleTimeout != 3*time.Second {
-		t.Fatalf("expected idle timeout 3s, got %s", server.server.IdleTimeout)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := New(tt.config)
+
+			if got := server.server.ReadHeaderTimeout; got != tt.wantReadHeaderTimeout {
+				t.Fatalf("expected read header timeout %s, got %s", tt.wantReadHeaderTimeout, got)
+			}
+			if got := server.server.WriteTimeout; got != tt.wantWriteTimeout {
+				t.Fatalf("expected write timeout %s, got %s", tt.wantWriteTimeout, got)
+			}
+			if got := server.server.IdleTimeout; got != tt.wantIdleTimeout {
+				t.Fatalf("expected idle timeout %s, got %s", tt.wantIdleTimeout, got)
+			}
+		})
 	}
 }

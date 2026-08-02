@@ -2,6 +2,7 @@
 package logger
 
 import (
+	"context"
 	"fmt"
 	"go-bootstrap/config"
 	"log"
@@ -13,9 +14,13 @@ import (
 )
 
 var (
-	logOnce  sync.Once
-	instance *zap.Logger
+	logOnce sync.Once
+	Log     *zap.Logger
 )
+
+type contextKey uint8
+
+const requestIDKey contextKey = iota
 
 // Init configures the process-wide logger. The first call wins and must happen
 // during process startup before serving requests.
@@ -26,7 +31,7 @@ func Init() {
 			log.Fatal("failed to initialise logger")
 		}
 
-		instance = configuredLogger
+		Log = configuredLogger
 	})
 }
 
@@ -63,11 +68,29 @@ func parseLevel(level string) zap.AtomicLevel {
 	}
 }
 
+// WithRequestID stores the request ID in the context.
+func WithRequestID(ctx context.Context, requestID string) context.Context {
+	return context.WithValue(ctx, requestIDKey, requestID)
+}
+
+// RequestID extracts the request ID from the context.
+func RequestID(ctx context.Context) (string, bool) {
+	if ctx == nil {
+		return "", false
+	}
+
+	requestID, ok := ctx.Value(requestIDKey).(string)
+	return requestID, ok && requestID != ""
+}
+
 // Logger returns the initialized process-wide logger.
-func Logger() *zap.Logger {
-	// TO DO: Use context to add request-scoped fields to the logger.
-	if instance == nil {
+func Logger(ctx context.Context) *zap.Logger {
+	if Log == nil {
 		return zap.NewNop()
 	}
-	return instance
+	if requestID, ok := RequestID(ctx); ok {
+		return Log.With(zap.String("rqId", requestID))
+	}
+
+	return Log
 }
